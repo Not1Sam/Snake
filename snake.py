@@ -1,9 +1,10 @@
 import pygame as pg
-#! import pygame_gui as pgui
-import sys
 import os
+import sys
 import random
 import json
+import gc
+import time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,6 +38,7 @@ clock = pg.time.Clock()
 
 #*Font
 title_font = pg.font.SysFont('pacifico regular', 70)
+lm_font = pg.font.SysFont('pacifico regular', 60)
 text_font = pg.font.SysFont('RobotoCondensed Black',30)
 
 def main_menu():
@@ -70,15 +72,18 @@ def main_menu():
             pg.draw.rect(SCREEN, btn_hover, play_button, border_radius=20)
             SCREEN.blit(play_text, (540, 250))
             if pg.mouse.get_pressed()[0]:
+                gc.collect()
                 game()
 
         if leave_button.collidepoint(mouse):
             pg.draw.rect(SCREEN, btn_hover, leave_button, border_radius=20)
             SCREEN.blit(leave_text, (509, 420))
             if pg.mouse.get_pressed()[0]:
+                gc.collect()
                 pg.quit()
                 sys.exit()
-        pg.display.flip()
+
+        pg.display.update()
         
 class HighScoreManager:
     def __init__(self, filename=HighScore_loc):
@@ -151,6 +156,7 @@ def game():
 
         for ev in pg.event.get():
             if ev.type == pg.QUIT:
+                gc.collect()
                 pg.quit()
                 sys.exit()
             elif ev.type == pg.KEYDOWN:
@@ -200,15 +206,17 @@ def game():
         clock.tick(5)
 
     pg.image.save(SCREEN, "Finale.png")
-    end_menu(score, HighScore)
+    gc.collect()
+    end_menu(HighScore)
     
     
-def end_menu(score,HSB):
+def end_menu(HSB):
     pg.time.delay(300)
     while True:
         mouse = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                gc.collect()
                 pg.quit()
                 sys.exit()
                 
@@ -218,30 +226,39 @@ def end_menu(score,HSB):
         rect = pg.Surface((800,430), pg.SRCALPHA, 32)
         rect.fill((27, 67, 50, 40))
         SCREEN.blit(rect, (245,175))
-    
 
-        play_button = pg.Rect(488, 266, 324, 100)
-        pg.draw.rect(SCREEN, btn, play_button, border_radius=20)
-        play_text = text_font.render('REPLAY', True, text_color)
-        SCREEN.blit(play_text, (540, 250))
+        if HSB == True:
+            end_txt = lm_font.render("You Broke The HighScore !!!!!", True,background_color )
+            SCREEN.blit(end_txt, (300, 200))
+        else:
+            end_txt = lm_font.render("Game Over", True, background_color)
+            SCREEN.blit(end_txt, (500, 200))
 
-        leave_button = pg.Rect(488, 430, 324, 100)
-        pg.draw.rect(SCREEN, btn, leave_button, border_radius=20)
-        leave_text = text_font.render('RETURN', True, text_color)
-        SCREEN.blit(leave_text, (509, 420))
+        replay_button = pg.Rect(488, 356, 324, 100)
+        pg.draw.rect(SCREEN, btn, replay_button, border_radius=20)
+        replay_text = lm_font.render('REPLAY', True, text_color)
+        SCREEN.blit(replay_text, (505, 350))
 
-        if play_button.collidepoint(mouse):
-            pg.draw.rect(SCREEN, btn_hover, play_button, border_radius=20)
-            SCREEN.blit(play_text, (540, 250))
+        if replay_button.collidepoint(mouse):
+            pg.draw.rect(SCREEN, btn_hover, replay_button, border_radius=20)
+            SCREEN.blit(replay_text, (505, 350))
             if pg.mouse.get_pressed()[0]:
+                gc.collect()
                 game()
+
+        leave_button = pg.Rect(488, 485, 324, 100)
+        pg.draw.rect(SCREEN, btn, leave_button, border_radius=20)
+        leave_text = lm_font.render('RETURN', True, text_color)
+        SCREEN.blit(leave_text, (500, 485))
 
         if leave_button.collidepoint(mouse):
             pg.draw.rect(SCREEN, btn_hover, leave_button, border_radius=20)
-            SCREEN.blit(leave_text, (509, 420))
+            SCREEN.blit(leave_text, (500, 485))
             if pg.mouse.get_pressed()[0]:
+                time.sleep(0.1)
+                gc.collect()
                 main_menu()
-        pg.display.flip()
+                
         pg.display.update()
     
     
