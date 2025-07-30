@@ -128,6 +128,7 @@ def game():
     apple_x, apple_y = random.randint(0,31)*40, random.randint(1,17)*40
     snake_body = [(posx, posy), (posx-40, posy), (posx-80, posy)]
     highScore_manager = HighScoreManager()
+    hsb = False
 
     running = True
     while running:
@@ -153,6 +154,7 @@ def game():
             HighScore = score
             highScore_manager.save(HighScore)
             pg.display.set_caption("You Broke The HighScore !!!!!")
+            hsb = True
 
         for ev in pg.event.get():
             if ev.type == pg.QUIT:
@@ -195,7 +197,7 @@ def game():
         if new_head == (apple_x, apple_y):
             score += 1
             apple_x, apple_y = random.randint(0,31)*40, random.randint(1,17)*40
-            snake_body.append(snake_body[-1])  # Grow snake
+            snake_body.append(snake_body[-1])
 
         for i, segment in enumerate(snake_body):
             color = "yellow" if i == 0 else ("red" if i == len(snake_body)-1 else body_color)
@@ -207,7 +209,7 @@ def game():
 
     pg.image.save(SCREEN, "Finale.png")
     gc.collect()
-    end_menu(HighScore)
+    end_menu(hsb)
     
     
 def end_menu(HSB):
@@ -228,8 +230,8 @@ def end_menu(HSB):
         SCREEN.blit(rect, (245,175))
 
         if HSB == True:
-            end_txt = lm_font.render("You Broke The HighScore !!!!!", True,background_color )
-            SCREEN.blit(end_txt, (300, 200))
+            end_txt = lm_font.render("You Broke The HighScore !!!", True,background_color )
+            SCREEN.blit(end_txt, (280, 200))
         else:
             end_txt = lm_font.render("Game Over", True, background_color)
             SCREEN.blit(end_txt, (500, 200))
