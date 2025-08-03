@@ -9,19 +9,35 @@ import time
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 pg.init()
+pg.mixer.init()
 pg.display.set_caption("Snake")
 pg.font.init()
+random.seed()
 
 #*Screen dimensions
 width, height = 1280, 720
 SCREEN = pg.display.set_mode((width, height))
 
 #*Resource paths
-back_loc = (r"snake_background.png")
-apple_loc = (r"apple.png")
-snake_head_loc = (r"snake_head.png")
-snake_mouth_open_loc = (r"snake_mouth_open.png")
-HighScore_loc = (r"HighScore.json")
+back_loc = (r"./assets/snake_background.png")
+apple_loc = (r"./assets/apple.png")
+HighScore_loc = (r"./assets/HighScore.json")
+
+snake_head_loc = (r"./assets/head_closed.png")
+snake_mouth_open_loc = (r"./assets/head_opend.png")
+
+snake_body1_loc = (r"./assets/body1.png")
+snake_body2_loc = (r"./assets/body2.png")
+
+snake_tail1_loc = (r"./assets/tail1.png")
+snake_tail2_loc = (r"./assets/tail2.png")
+
+eating_sound_loc = (r"./assets/eating.wav")
+
+bonk_sound_loc = (r"./assets/bonk.wav")
+
+direction_change_sound_loc = (r"./assets/direction_change.wav")
+
 
 #*Colors
 background_color = '#F4FEEA'
@@ -129,6 +145,7 @@ def game():
     snake_body = [(posx, posy), (posx-40, posy), (posx-80, posy)]
     highScore_manager = HighScoreManager()
     hsb = False
+    rand_n1 = True
 
     running = True
     while running:
@@ -163,12 +180,23 @@ def game():
                 sys.exit()
             elif ev.type == pg.KEYDOWN:
                 if ev.key in (pg.K_w, pg.K_UP) and direction != "down":
+                    direction_change = pg.mixer.Sound(direction_change_sound_loc)
+                    direction_change.play()
                     direction = "up"
+                    
                 elif ev.key in (pg.K_s, pg.K_DOWN) and direction != "up":
+                    direction_change = pg.mixer.Sound(direction_change_sound_loc)
+                    direction_change.play()
                     direction = "down"
+                    
                 elif ev.key in (pg.K_a, pg.K_LEFT) and direction != "right":
+                    direction_change = pg.mixer.Sound(direction_change_sound_loc)
+                    direction_change.play()
                     direction = "left"
+                    
                 elif ev.key in (pg.K_d, pg.K_RIGHT) and direction != "left":
+                    direction_change = pg.mixer.Sound(direction_change_sound_loc)
+                    direction_change.play()
                     direction = "right"
 
         head_x, head_y = snake_body[0]
@@ -185,10 +213,14 @@ def game():
 
         #* wall collision
         if not ( 0 <= head_x<=1240 and 40<= head_y<=680 ):
+            bonk_sound = pg.mixer.Sound(bonk_sound_loc)
+            bonk_sound.play()
             break
 
         #* self collision 
         if new_head in snake_body:
+            bonk_sound = pg.mixer.Sound(bonk_sound_loc)
+            bonk_sound.play()
             break
 
         snake_body = [new_head] + snake_body[:-1]
@@ -198,16 +230,72 @@ def game():
             score += 1
             apple_x, apple_y = random.randint(0,31)*40, random.randint(1,17)*40
             snake_body.append(snake_body[-1])
-
+            eating_sound = pg.mixer.Sound(eating_sound_loc)
+            eating_sound.play()
+        #* Head Draw
         for i, segment in enumerate(snake_body):
-            color = "yellow" if i == 0 else ("red" if i == len(snake_body)-1 else body_color)
-            pg.draw.rect(SCREEN, color, (segment[0], segment[1], 40, 40), border_radius=10)
+            if(i==0):
+                if head_x in [apple_x - 40, apple_x + 40] and head_y in [apple_y -40 , apple_y + 40]:
+                    head_image = pg.image.load(snake_mouth_open_loc)
+                    head_image = pg.transform.scale(head_image, (40, 40))
+                    if direction == "right":
+                        head_image = pg.transform.rotate(head_image, -90)
+                    elif direction == "left":
+                        head_image = pg.transform.rotate(head_image, 90)
+                    elif direction == "down":
+                        head_image = pg.transform.rotate(head_image, 180)
+                else:
+                    head_image = pg.image.load(snake_head_loc)
+                    head_image = pg.transform.scale(head_image, (40, 40))
+                    if direction == "right":
+                        head_image = pg.transform.rotate(head_image, -90)
+                    elif direction == "left":
+                        head_image = pg.transform.rotate(head_image, 90)
+                    elif direction == "down":
+                        head_image = pg.transform.rotate(head_image, 180)
+                SCREEN.blit(head_image, segment)
+            #* Tail Draw
+            elif (i == len(snake_body) - 1):
+                
+                if rand_n1 == True:
+                    rand_tail = snake_tail1_loc
+                else:
+                    rand_tail = snake_tail2_loc 
+    
+                tail_image = pg.image.load(rand_tail)
+                tail_image = pg.transform.scale(tail_image, (40, 40))
+                if direction == "right":
+                    tail_image = pg.transform.rotate(tail_image, -90)
+                elif direction == "left":
+                    tail_image = pg.transform.rotate(tail_image, 90)
+                elif direction == "down":
+                    tail_image = pg.transform.rotate(tail_image, 180)
+                SCREEN.blit(tail_image, segment)
+                rand_n1 = not rand_n1    
+            #* Body Draw
+            else:
+                rand_n2= random.randint(0,1)
+                if rand_n2 == 0:
+                    rand_body = snake_body1_loc
+                else:
+                    rand_body = snake_body2_loc 
+                
+                body_image = pg.image.load(rand_body)
+                body_image = pg.transform.scale(body_image, (41, 40))
+                if direction == "right":
+                    body_image = pg.transform.rotate(body_image, -90)
+                elif direction == "left":
+                    body_image = pg.transform.rotate(body_image, 90)
+                elif direction == "down":
+                    body_image = pg.transform.rotate(body_image, 180)
+                SCREEN.blit(body_image, segment)
 
         SCREEN.blit(apple, (apple_x, apple_y))
         pg.display.update()
         clock.tick(5)
 
-    pg.image.save(SCREEN, "Finale.png")
+    pg.image.save(SCREEN, "./assets/Finale.png")
+    pg.display.set_caption("Game Over")
     gc.collect()
     end_menu(hsb)
     
@@ -222,8 +310,8 @@ def end_menu(HSB):
                 pg.quit()
                 sys.exit()
                 
-        pg.image.save(SCREEN,"Finale.png")
-        pg.image.load("Finale.png")
+        pg.image.save(SCREEN,"./assets/Finale.png")
+        pg.image.load("./assets/Finale.png")
         
         rect = pg.Surface((800,430), pg.SRCALPHA, 32)
         rect.fill((27, 67, 50, 40))
@@ -262,6 +350,5 @@ def end_menu(HSB):
                 main_menu()
                 
         pg.display.update()
-    
     
 main_menu()
