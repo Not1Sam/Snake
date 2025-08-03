@@ -10,6 +10,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 pg.init()
 pg.mixer.init()
+pg.mixer.music.load("./assets/snake_music.mp3")
+pg.mixer.music.play(loops=-1) 
 pg.display.set_caption("Snake")
 pg.font.init()
 random.seed()
